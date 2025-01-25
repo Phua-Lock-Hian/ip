@@ -7,7 +7,7 @@ public class Swing {
         System.out.println("What can I do for you?");
         System.out.println("--");
 
-        Echo echo = new Echo();
-        echo.start();
+        List list = new List();
+        list.start();
     }
 }

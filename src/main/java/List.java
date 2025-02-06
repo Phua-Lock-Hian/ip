@@ -3,9 +3,10 @@ import java.util.Scanner;
 public class List {
     private final Task[] list;
     private int len;
+    private static final int MAX_LIST_LEN = 100;
 
     public List() {
-        list = new Task[100];
+        list = new Task[MAX_LIST_LEN];
         len = 0;
     }
 
@@ -24,7 +25,63 @@ public class List {
 
     private void errorMessage() {
         System.out.println("uh oh, something went wrong meow. try again~");
-        System.out.println("--");
+    }
+
+    private void processListCommand() {
+        System.out.println("Here are the tasks in your list meow:");
+        for (int i = 0; i < len; i++) {
+            System.out.println((i + 1) + "." + list[i]);
+        }
+    }
+
+    private void processEventCommand(String[] eventArgParts, String eventDesc) {
+        String start = eventArgParts[1].split("from", 2)[1];
+        String end = eventArgParts[2].split("to", 2)[1];
+        list[len] = new Event(eventDesc, start, end);
+        len++;
+        addedToList();
+    }
+
+    private void processDeadlineCommand(String[] parts) {
+        if (!isValidCommand(parts, 2) || !parts[1].startsWith("/by")) {
+            errorMessage();
+            return;
+        }
+        String[] deadlineArgParts = parts[1].split("/by", 2);
+        String deadlineDesc = deadlineArgParts[0];
+        String by = deadlineArgParts[1].split(" ", 2)[1];
+        list[len] = new Deadline(deadlineDesc, by);
+        len++;
+        addedToList();
+    }
+
+    private void processTaskStatus(String[] parts, boolean isDone) {
+        if (!isValidCommand(parts, 2)) {
+            errorMessage();
+            return;
+        }
+        try {
+            int index = Integer.parseInt(parts[1]);
+            if (index <= 0 || index > len) {
+                errorMessage();
+                return;
+            }
+            list[index - 1].setStatusIcon(isDone);
+            if (isDone) {
+                System.out.println("Nice! I've marked this task as done meow:");
+            } else {
+                System.out.println("Aw man, I guess you're not done yet. Do it soon meow:");
+            }
+            System.out.println(list[index - 1]);
+        } catch (NumberFormatException e) {
+            errorMessage();
+        }
+    }
+
+    private void processMarkCommand(int toMark) {
+        list[toMark - 1].setStatusIcon(true);
+        System.out.println("Nice! I've marked this task as done meow:");
+        System.out.println(list[toMark - 1].toString());
     }
 
     public void start() {
@@ -34,62 +91,58 @@ public class List {
             System.out.println("--");
             line = in.nextLine().trim();
             String[] parts = line.split(" ", 2);
-            String command = parts[0];
+            String command = parts[0].toLowerCase(); //make the command case-insensitive
             System.out.println("--");
             switch (command) {
             case "list":
-                if (!isValidCommand(parts, 1)) break;
-
-                System.out.println("Here are the tasks in your list meow:");
-                for (int i = 0; i < len; i++) {
-                    System.out.println((i + 1) + "." + list[i].toString());
+                //validation is done outside so that i do not have to pass parts into the process command function
+                if (!isValidCommand(parts, 1)) {
+                    errorMessage();
+                    break;
                 }
+                processListCommand();
                 break;
 
             case "mark":
-                if (!isValidCommand(parts, 2)) break;
-
-                int toMark = Integer.parseInt(parts[1]);
-                list[toMark - 1].setStatusIcon(true);
-                System.out.println("Nice! I've marked this task as done meow:");
-                System.out.println(list[toMark - 1].toString());
+                processTaskStatus(parts, true);
                 break;
 
             case "unmark":
-                if (!isValidCommand(parts, 2)) break;
-
-                int toUnmark = Integer.parseInt(parts[1]);
-                list[toUnmark - 1].setStatusIcon(false);
-                System.out.println("Aw man, I guess you're not done yet. Do it soon meow:");
-                System.out.println(list[toUnmark - 1].toString());
+                processTaskStatus(parts, false);
                 break;
 
             case "deadline":
-                if (!isValidCommand(parts, 2)) break;
-
-                String[] deadlineArgParts = parts[1].split("/by", 2);
-                String deadlineDesc = deadlineArgParts[0];
-                String by = deadlineArgParts[1].split(" ", 2)[1];
-                list[len] = new Deadline(deadlineDesc, by);
-                len++;
-                addedToList();
+                processDeadlineCommand(parts);
                 break;
 
             case "event":
-                if (!isValidCommand(parts, 2)) break;
+                //event command requires more validation than the rest
+                //have not thought of a good way to abstract this better but it is functional this way still
+                if (!isValidCommand(parts, 2)) {
+                    errorMessage();
+                    break;
+                }
 
                 String[] eventArgParts = parts[1].split("/", 3);
 
-                if (!isValidCommand(eventArgParts, 3)) break;
+                if (!isValidCommand(eventArgParts, 3)) {
+                    errorMessage();
+                    break;
+                }
+
                 String eventDesc = eventArgParts[0];
-                String start = eventArgParts[1].split("from", 2)[1];
-                String end = eventArgParts[2].split("to", 2)[1];
-                list[len] = new Event(eventDesc, start, end);
-                len++;
-                addedToList();
+
+                if (!eventArgParts[1].startsWith("from") || !eventArgParts[2].startsWith("to")) {
+                    errorMessage();
+                    break;
+                }
+
+                processEventCommand(eventArgParts, eventDesc);
                 break;
+
             case "bye":
                 break;
+
             default:
                 //default case is to add task
                 //instruction assumes no more than 100 tasks

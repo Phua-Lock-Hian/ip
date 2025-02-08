@@ -1,4 +1,10 @@
+package swing;
+
 import java.util.Scanner;
+
+import swing.tasktypes.Deadline;
+import swing.tasktypes.Event;
+import swing.tasktypes.Task;
 
 public class List {
     private final Task[] list;

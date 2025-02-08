@@ -1,3 +1,5 @@
+package swing.tasktypes;
+
 public class Event extends Task {
 
     protected String start;

@@ -19,7 +19,6 @@ public class List {
         if (parts.length == expectedLen) {
             return true;
         }
-        errorMessage();
         return false;
     }
 
@@ -42,10 +41,9 @@ public class List {
         addedToList();
     }
 
-    private void processDeadlineCommand(String[] parts) {
+    private void processDeadlineCommand(String[] parts) throws SwingException {
         if (!isValidCommand(parts, 2) || !parts[1].startsWith("/by")) {
-            errorMessage();
-            return;
+            throw new SwingException();
         }
         String[] deadlineArgParts = parts[1].split("/by", 2);
         String deadlineDesc = deadlineArgParts[0];
@@ -55,10 +53,9 @@ public class List {
         addedToList();
     }
 
-    private void processTaskStatus(String[] parts, boolean isDone) {
+    private void processTaskStatus(String[] parts, boolean isDone) throws SwingException {
         if (!isValidCommand(parts, 2)) {
-            errorMessage();
-            return;
+            throw new SwingException();
         }
         try {
             int index = Integer.parseInt(parts[1]);
@@ -74,6 +71,7 @@ public class List {
             }
             System.out.println(list[index - 1]);
         } catch (NumberFormatException e) {
+            System.out.println("I can't mark/unmark something that isn't a number meow :(");
             errorMessage();
         }
     }
@@ -104,15 +102,27 @@ public class List {
                 break;
 
             case "mark":
-                processTaskStatus(parts, true);
+                try {
+                    processTaskStatus(parts, true);
+                } catch (SwingException e) {
+                    errorMessage();
+                }
                 break;
 
             case "unmark":
-                processTaskStatus(parts, false);
+                try {
+                    processTaskStatus(parts, false);
+                } catch (SwingException e) {
+                    errorMessage();
+                }
                 break;
 
             case "deadline":
-                processDeadlineCommand(parts);
+                try {
+                    processDeadlineCommand(parts);
+                } catch (SwingException e) {
+                    errorMessage();
+                }
                 break;
 
             case "event":
@@ -139,17 +149,22 @@ public class List {
 
                 processEventCommand(eventArgParts, eventDesc);
                 break;
-
+            case "todo":
+                //instruction assumes no more than 100 tasks
+                //hence no need to check for index out of range
+                if (!isValidCommand(parts, 2)) {
+                    errorMessage();
+                    break;
+                }
+                list[len] = new Task(parts[1]);
+                len++;
+                addedToList();
             case "bye":
                 break;
 
             default:
-                //default case is to add task
-                //instruction assumes no more than 100 tasks
-                //hence no need to check for index out of range
-                list[len] = new Task(line);
-                len++;
-                addedToList();
+                //default case is invalid command
+                errorMessage();
                 break;
             }
         } while (!line.equals("bye"));

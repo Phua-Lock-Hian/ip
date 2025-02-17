@@ -1,33 +1,23 @@
 package swing;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-import swing.tasktypes.Deadline;
-import swing.tasktypes.Event;
-import swing.tasktypes.Task;
+import swing.tasktypes.*;
 
 public class List {
     public ArrayList<Task> list;
-    private int len;
-    private static final int MAX_LIST_LEN = 100;
 
     public List() {
-        list = new Task[MAX_LIST_LEN];
-        len = 0;
+        list = new ArrayList<>();
     }
     private void addedToList() {
-        System.out.println("added: " + list[len - 1].toString()); //to offset zero indexing
-        System.out.println("Now you have " + len + " tasks in list.");
+        System.out.println("added: " + list.get(list.size() - 1).toString()); //to offset zero indexing
+        System.out.println("Now you have " + list.size() + " tasks in list.");
     }
 
     private boolean isValidCommand(String[] parts, int expectedLen) {
-        if (parts.length == expectedLen) {
-            return true;
-        }
-        return false;
+        return parts.length == expectedLen;
     }
 
     private void errorMessage() {
@@ -36,16 +26,15 @@ public class List {
 
     private void processListCommand() {
         System.out.println("Here are the tasks in your list meow:");
-        for (int i = 0; i < len; i++) {
-            System.out.println((i + 1) + "." + list[i]);
+        for (int i = 0; i < list.size(); i++) {
+            System.out.println((i + 1) + "." + list.get(i));
         }
     }
 
     private void processEventCommand(String[] eventArgParts, String eventDesc) {
         String start = eventArgParts[1].split("from", 2)[1];
         String end = eventArgParts[2].split("to", 2)[1];
-        list[len] = new Event(eventDesc, start, end);
-        len++;
+        list.add(new Event(eventDesc, start, end));
         addedToList();
     }
 
@@ -56,8 +45,7 @@ public class List {
         String[] deadlineArgParts = parts[1].split("/by", 2);
         String deadlineDesc = deadlineArgParts[0];
         String by = deadlineArgParts[1].split(" ", 2)[1];
-        list[len] = new Deadline(deadlineDesc, by);
-        len++;
+        list.add(new Deadline(deadlineDesc, by));
         addedToList();
     }
 
@@ -67,27 +55,21 @@ public class List {
         }
         try {
             int index = Integer.parseInt(parts[1]);
-            if (index <= 0 || index > len) {
+            if (index <= 0 || index > list.size()) {
                 errorMessage();
                 return;
             }
-            list[index - 1].setStatusIcon(isDone);
+            list.get(index - 1).setStatusIcon(isDone);
             if (isDone) {
                 System.out.println("Nice! I've marked this task as done meow:");
             } else {
                 System.out.println("Aw man, I guess you're not done yet. Do it soon meow:");
             }
-            System.out.println(list[index - 1]);
+            System.out.println(list.get(index - 1));
         } catch (NumberFormatException e) {
             System.out.println("I can't mark/unmark something that isn't a number meow :(");
             errorMessage();
         }
-    }
-
-    private void processMarkCommand(int toMark) {
-        list[toMark - 1].setStatusIcon(true);
-        System.out.println("Nice! I've marked this task as done meow:");
-        System.out.println(list[toMark - 1].toString());
     }
 
     public void start() {
@@ -101,7 +83,7 @@ public class List {
             System.out.println("--");
             switch (command) {
             case "list":
-                //validation is done outside so that i do not have to pass parts into the process command function
+                //validation is done outside so that I do not have to pass parts into the process command function
                 if (!isValidCommand(parts, 1)) {
                     errorMessage();
                     break;
@@ -135,7 +117,7 @@ public class List {
 
             case "event":
                 //event command requires more validation than the rest
-                //have not thought of a good way to abstract this better but it is functional this way still
+                //have not thought of a good way to abstract this better, but it is functional this way still
                 if (!isValidCommand(parts, 2)) {
                     errorMessage();
                     break;
@@ -164,8 +146,7 @@ public class List {
                     errorMessage();
                     break;
                 }
-                list[len] = new Task(parts[1]);
-                len++;
+                list.add(new Task(parts[1]));
                 addedToList();
             case "bye":
                 break;

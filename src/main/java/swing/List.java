@@ -3,22 +3,18 @@ package swing;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import swing.tasktypes.Deadline;
-import swing.tasktypes.Event;
-import swing.tasktypes.Task;
+import swing.tasktypes.*;
 
 public class List {
-    private final ArrayList<Task> list;
-    private int len;
+    public ArrayList<Task> list;
 
     public List() {
-        list = new ArrayList<>(100);
-        len = 0;
+        list = new ArrayList<>();
     }
 
     private void addedToList() {
-        System.out.println("added: " + list.get(len - 1).toString()); //to offset zero indexing
-        System.out.println("Now you have " + len + " tasks in list.");
+        System.out.println("added: " + list.get(list.size() - 1).toString()); //to offset zero indexing
+        System.out.println("Now you have " + list.size() + " tasks in list.");
     }
 
     private boolean isInvalidCommand(String[] parts, int expectedLen) {
@@ -26,7 +22,7 @@ public class List {
     }
 
     private boolean isInvalidIndex(int index) {
-        if (index <= 0 || index > len) {
+        if (index <= 0 || index > list.size()) {
             errorMessage();
             return true;
         }
@@ -39,7 +35,7 @@ public class List {
 
     private void processListCommand() {
         System.out.println("Here are the tasks in your list meow:");
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < list.size(); i++) {
             System.out.println((i + 1) + "." + list.get(i));
         }
     }
@@ -50,8 +46,7 @@ public class List {
         if (start.isEmpty() || end.isEmpty()) {
             throw new SwingException();
         }
-        list.add(len, new Event(eventDesc, start, end));
-        len++;
+        list.add(new Event(eventDesc, start, end));
         addedToList();
     }
 
@@ -68,8 +63,7 @@ public class List {
         if (by.isEmpty()) {
             throw new SwingException();
         }
-        list.add(len, new Deadline(deadlineDesc, by));
-        len++;
+        list.add(new Deadline(deadlineDesc, by));
         addedToList();
     }
 
@@ -101,8 +95,7 @@ public class List {
             System.out.println("Okay, I've removed this task meow:");
             System.out.println(list.get(index - 1)); //account for zero indexing
             list.remove(index - 1);
-            len--;
-            System.out.println("Now you have " + len + " tasks in list.");
+            System.out.println("Now you have " + list.size() + " tasks in list.");
         } catch (NumberFormatException e) {
             System.out.println("I can't help you without the item number meow :(");
         }
@@ -191,8 +184,7 @@ public class List {
                     errorMessage();
                     break;
                 }
-                list.add(len, new Task(parts[1]));
-                len++;
+                list.add(new Task(parts[1]));
                 addedToList();
             case "bye":
                 break;

@@ -1,5 +1,8 @@
 package swing;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.util.Scanner;
 
 import swing.tasktypes.Deadline;
@@ -7,7 +10,7 @@ import swing.tasktypes.Event;
 import swing.tasktypes.Task;
 
 public class List {
-    private final Task[] list;
+    public ArrayList<Task> list;
     private int len;
     private static final int MAX_LIST_LEN = 100;
 
@@ -15,7 +18,6 @@ public class List {
         list = new Task[MAX_LIST_LEN];
         len = 0;
     }
-
     private void addedToList() {
         System.out.println("added: " + list[len - 1].toString()); //to offset zero indexing
         System.out.println("Now you have " + len + " tasks in list.");

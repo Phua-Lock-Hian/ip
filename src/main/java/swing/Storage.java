@@ -12,7 +12,7 @@ public class Storage {
     public static void createFile(){
         try {
             //create file to store data if it does not exist
-            File f = new File("data.txt");
+            File f = new File("./data.txt");
             if (f.createNewFile()) { //only creates file if not existing
                 System.out.println("Data file created");
             } else { //data file exists, read it
@@ -39,7 +39,7 @@ public class Storage {
     public static List loadFile() {
         List taskList = new List();
         try {
-            File file = new File("data.txt");
+            File file = new File("./data.txt");
             Scanner scan = new Scanner(file);
             while (scan.hasNext()) {
                 String line = scan.nextLine();

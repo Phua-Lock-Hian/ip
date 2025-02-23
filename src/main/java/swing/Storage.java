@@ -5,17 +5,19 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import swing.tasktypes.*;
 
 public class Storage {
+
     public static void createFile(){
         try {
-            //create file to store data if it does not exist
+            // Create file to store data if it does not exist
             File f = new File("./data.txt");
-            if (f.createNewFile()) { //only creates file if not existing
+            if (f.createNewFile()) { // Only creates file if not existing
                 System.out.println("Data file created");
-            } else { //data file exists, read it
+            } else { // Data file exists, read it
                 System.out.println("Data found, reading existing data");
             }
         } catch (IOException e) {
@@ -23,10 +25,10 @@ public class Storage {
         }
     }
 
-    public static void saveFile(List list, File file) {
+    public static void saveFile(TaskList tasks, File file) {
         try {
             FileWriter fw = new FileWriter(file);
-            for (Task t : list.list) {
+            for (Task t : tasks.getTasks()) {
                 fw.write(t.toString() + System.lineSeparator());
             }
             fw.close();
@@ -36,42 +38,57 @@ public class Storage {
         System.out.println("File saved");
     }
 
-    public static List loadFile() {
-        List taskList = new List();
+    public static TaskList loadFile() {
+        TaskList taskList = new TaskList();
         try {
             File file = new File("./data.txt");
             Scanner scan = new Scanner(file);
-            while (scan.hasNext()) {
+
+            // Define regex patterns to handle descriptions with spaces:
+            Pattern todoPattern = Pattern.compile("^\\[T\\]\\[( |X)\\] (.*)$");
+            Pattern deadlinePattern = Pattern.compile("^\\[D\\]\\[( |X)\\] (.*?) \\(by: (.*?)\\)$");
+            Pattern eventPattern = Pattern.compile("^\\[E\\]\\[( |X)\\] (.*?) \\(from: (.*?) to: (.*?)\\)$");
+
+            while (scan.hasNextLine()) {
                 String line = scan.nextLine();
-                String trim = line.substring(3); //remove the [task type] first
-                String [] parts = trim.split("] ");
-                //parts[0] contains [X or [ depending on if task is marked as done, parts[1] contains desc and params to be further processed
-                String desc; //needed for all task types but need to trim accordingly
-                boolean isDone = parts[0].contains("[X");
+                Matcher matcher;
                 if (line.startsWith("[T]")) {
-                    desc = parts[1];
-                    Task newTask = new Task(desc);
-                    taskList.list.add(newTask);
-                    newTask.setStatusIcon(isDone);
-                }
-                else if (line.startsWith("[D]")) {
-                    String [] params = parts[1].split(" ");
-                    desc = params[0];
-                    String by = params[2].replace(")", ""); //remove the closing bracket
-                    Deadline newDeadline = new Deadline(desc, by);
-                    taskList.list.add(newDeadline);
-                    newDeadline.setStatusIcon(isDone);
-                }
-                else if (line.startsWith("[E]")) {
-                    String [] params = parts[1].split(" ");
-                    desc = params[0];
-                    String from = params[2];
-                    String to = params[4].replace(")","");
-                    Event newEvent = new Event(desc, from, to);
-                    taskList.list.add(newEvent);
-                    newEvent.setStatusIcon(isDone);
-                }
-                else {
+                    matcher = todoPattern.matcher(line);
+                    if (matcher.matches()) {
+                        boolean isDone = matcher.group(1).trim().equals("X");
+                        String desc = matcher.group(2);
+                        Task newTask = new Task(desc);
+                        newTask.setStatusIcon(isDone);
+                        taskList.add(newTask);
+                    } else {
+                        System.out.println("Error parsing todo: " + line);
+                    }
+                } else if (line.startsWith("[D]")) {
+                    matcher = deadlinePattern.matcher(line);
+                    if (matcher.matches()) {
+                        boolean isDone = matcher.group(1).trim().equals("X");
+                        String desc = matcher.group(2);
+                        String by = matcher.group(3);
+                        Deadline newDeadline = new Deadline(desc, by);
+                        newDeadline.setStatusIcon(isDone);
+                        taskList.add(newDeadline);
+                    } else {
+                        System.out.println("Error parsing deadline: " + line);
+                    }
+                } else if (line.startsWith("[E]")) {
+                    matcher = eventPattern.matcher(line);
+                    if (matcher.matches()) {
+                        boolean isDone = matcher.group(1).trim().equals("X");
+                        String desc = matcher.group(2);
+                        String from = matcher.group(3);
+                        String to = matcher.group(4);
+                        Event newEvent = new Event(desc, from, to);
+                        newEvent.setStatusIcon(isDone);
+                        taskList.add(newEvent);
+                    } else {
+                        System.out.println("Error parsing event: " + line);
+                    }
+                } else {
                     System.out.println("Error in loading line: " + line);
                 }
             }

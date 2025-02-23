@@ -9,8 +9,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import swing.tasktypes.*;
 
+/**
+ * Utility class to handle data storage
+ */
 public class Storage {
 
+    /**
+     * Create file for data storage if it does not already exist
+     */
     public static void createFile(){
         try {
             // Create file to store data if it does not exist
@@ -25,6 +31,10 @@ public class Storage {
         }
     }
 
+    /**
+     * @param tasks a TaskList containing all the tasks/deadlines/events to save
+     * @param file to save data in
+     */
     public static void saveFile(TaskList tasks, File file) {
         try {
             FileWriter fw = new FileWriter(file);
@@ -38,6 +48,9 @@ public class Storage {
         System.out.println("File saved");
     }
 
+    /**
+     * @return the saved data as a taskList for use in the program
+     */
     public static TaskList loadFile() {
         TaskList taskList = new TaskList();
         try {

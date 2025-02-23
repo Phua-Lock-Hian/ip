@@ -2,6 +2,9 @@ package swing;
 
 import swing.tasktypes.*;
 
+/**
+ * Class to parse and execute user commands
+ */
 public class Parser {
 
     private boolean isInvalidCommand(String[] parts, int expectedLen) {
@@ -26,7 +29,6 @@ public class Parser {
     }
 
     private void processListCommand(TaskList tasks, Ui ui) {
-        ui.showMessage("Here are the tasks in your list meow:");
         for (int i = 0; i < tasks.size(); i++) {
             ui.showMessage((i + 1) + "." + tasks.get(i));
         }
@@ -93,6 +95,23 @@ public class Parser {
         }
     }
 
+    /**
+     * @param line contains user input
+     * @param tasks contains the list of tasks
+     * @param ui handles user interface
+     */
+    private void processFindCommand(TaskList tasks, Ui ui, String[] parts) {
+        String keyword = parts[1];
+        TaskList searchResults = new TaskList();
+        for (Task i : tasks.getTasks()) {
+            if (i.toString().contains(keyword)) {
+                searchResults.add(i);
+            }
+        }
+        ui.showMessage("Here are the matching tasks in your list meow:");
+        processListCommand(searchResults, ui);
+    }
+
     public void parseAndExecute(String line, TaskList tasks, Ui ui) {
         String[] parts = line.split(" ", 2);
         String command = parts[0].toLowerCase(); //make the command case-insensitive
@@ -103,6 +122,7 @@ public class Parser {
                 errorMessage(ui);
                 break;
             }
+            ui.showMessage("Here are the tasks in your list meow:"); //placed outside processListCommand so the former is reusable for "find" case
             processListCommand(tasks, ui);
             break;
         case "delete":
@@ -169,6 +189,9 @@ public class Parser {
             }
             tasks.add(new Task(parts[1]));
             addedToList(tasks, ui);
+        case "find":
+            processFindCommand(tasks, ui, parts);
+            break;
         case "bye":
             break;
         default:

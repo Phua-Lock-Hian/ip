@@ -2,6 +2,9 @@ package swing;
 
 import swing.tasktypes.*;
 
+/**
+ * Class to parse and execute user commands
+ */
 public class Parser {
 
     private boolean isInvalidCommand(String[] parts, int expectedLen) {
@@ -92,6 +95,11 @@ public class Parser {
         }
     }
 
+    /**
+     * @param line contains user input
+     * @param tasks contains the list of tasks
+     * @param ui handles user interface
+     */
     private void processFindCommand(TaskList tasks, Ui ui, String[] parts) {
         String keyword = parts[1];
         TaskList searchResults = new TaskList();

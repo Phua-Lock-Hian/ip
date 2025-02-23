@@ -2,6 +2,10 @@ package swing;
 
 import java.io.File;
 
+
+/**
+ * Entry point of program
+ */
 public class Swing {
     public static void main(String[] args) {
         System.out.println("Setting up...");

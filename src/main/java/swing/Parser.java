@@ -2,6 +2,9 @@ package swing;
 
 import swing.tasktypes.*;
 
+/**
+ * Class to parse and execute user commands
+ */
 public class Parser {
 
     private boolean isInvalidCommand(String[] parts, int expectedLen) {
@@ -93,6 +96,11 @@ public class Parser {
         }
     }
 
+    /**
+     * @param line contains user input
+     * @param tasks contains the list of tasks
+     * @param ui handles user interface
+     */
     public void parseAndExecute(String line, TaskList tasks, Ui ui) {
         String[] parts = line.split(" ", 2);
         String command = parts[0].toLowerCase(); //make the command case-insensitive

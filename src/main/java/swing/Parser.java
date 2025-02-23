@@ -96,9 +96,9 @@ public class Parser {
     }
 
     /**
-     * @param line contains user input
      * @param tasks contains the list of tasks
      * @param ui handles user interface
+     * @param parts contains user input
      */
     private void processFindCommand(TaskList tasks, Ui ui, String[] parts) {
         String keyword = parts[1];
@@ -189,6 +189,7 @@ public class Parser {
             }
             tasks.add(new Task(parts[1]));
             addedToList(tasks, ui);
+            break;
         case "find":
             processFindCommand(tasks, ui, parts);
             break;

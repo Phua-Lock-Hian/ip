@@ -43,20 +43,33 @@ public class Storage {
             Scanner scan = new Scanner(file);
             while (scan.hasNext()) {
                 String line = scan.nextLine();
-                String trim = line.substring(3); //remove the [tasktype] first
-                String [] parts = trim.split(" ]");
-                String desc = parts[1]; //regardless of task type
+                String trim = line.substring(3); //remove the [task type] first
+                String [] parts = trim.split("] ");
+                //parts[0] contains [X or [ depending on if task is marked as done, parts[1] contains desc and params to be further processed
+                String desc; //needed for all task types but need to trim accordingly
+                boolean isDone = parts[0].contains("[X");
                 if (line.startsWith("[T]")) {
-                    taskList.list.add(new Task(desc));
+                    desc = parts[1];
+                    Task newTask = new Task(desc);
+                    taskList.list.add(newTask);
+                    newTask.setStatusIcon(isDone);
                 }
                 else if (line.startsWith("[D]")) {
-                    String by = parts[3].replace(")", ""); //remove the closing bracket
-                    taskList.list.add(new Deadline(desc, by));
+                    String [] params = parts[1].split(" ");
+                    desc = params[0];
+                    String by = params[2].replace(")", ""); //remove the closing bracket
+                    Deadline newDeadline = new Deadline(desc, by);
+                    taskList.list.add(newDeadline);
+                    newDeadline.setStatusIcon(isDone);
                 }
                 else if (line.startsWith("[E]")) {
-                    String from = parts[3];
-                    String to = parts[5].replace(")","");
-                    taskList.list.add(new Event(desc, from, to));
+                    String [] params = parts[1].split(" ");
+                    desc = params[0];
+                    String from = params[2];
+                    String to = params[4].replace(")","");
+                    Event newEvent = new Event(desc, from, to);
+                    taskList.list.add(newEvent);
+                    newEvent.setStatusIcon(isDone);
                 }
                 else {
                     System.out.println("Error in loading line: " + line);

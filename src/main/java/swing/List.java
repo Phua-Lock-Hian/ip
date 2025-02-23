@@ -41,8 +41,8 @@ public class List {
     }
 
     private void processEventCommand(String[] eventArgParts, String eventDesc) throws SwingException {
-        String start = eventArgParts[1].split("from", 2)[1];
-        String end = eventArgParts[2].split("to", 2)[1];
+        String start = eventArgParts[1].split("from ", 2)[1].trim(); //otherwise there is an extra space after start param
+        String end = eventArgParts[2].split("to ", 2)[1];
         if (start.isEmpty() || end.isEmpty()) {
             throw new SwingException();
         }
@@ -54,9 +54,9 @@ public class List {
         if (isInvalidCommand(parts, 2) || !parts[1].contains("/by")) {
             throw new SwingException();
         }
-        String[] deadlineArgParts = parts[1].split("/by", 2);
+        String[] deadlineArgParts = parts[1].split(" /by");
         String deadlineDesc = deadlineArgParts[0];
-        if (deadlineArgParts[1].isEmpty()) {
+        if (deadlineArgParts[1].isEmpty() || deadlineArgParts.length > 2) {
             throw new SwingException();
         }
         String by = deadlineArgParts[1].split(" ", 2)[1];
@@ -158,7 +158,7 @@ public class List {
                     break;
                 }
 
-                String[] eventArgParts = parts[1].split("/", 3);
+                String[] eventArgParts = parts[1].split("/");
 
                 if (isInvalidCommand(eventArgParts, 3)) {
                     errorMessage();

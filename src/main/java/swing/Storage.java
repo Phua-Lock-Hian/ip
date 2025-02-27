@@ -7,20 +7,25 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import swing.tasktypes.*;
+
+import swing.tasktypes.Task;
+import swing.tasktypes.Deadline;
+import swing.tasktypes.Event;
 
 /**
  * Utility class to handle data storage
  */
 public class Storage {
 
+    public static final String FILEPATH = "./data.txt";
+
     /**
      * Create file for data storage if it does not already exist
      */
-    public static void createFile(){
+    public static void createFile() {
         try {
             // Create file to store data if it does not exist
-            File f = new File("./data.txt");
+            File f = new File(FILEPATH);
             if (f.createNewFile()) { // Only creates file if not existing
                 System.out.println("Data file created");
             } else { // Data file exists, read it
@@ -33,7 +38,7 @@ public class Storage {
 
     /**
      * @param tasks a TaskList containing all the tasks/deadlines/events to save
-     * @param file to save data in
+     * @param file  to save data in
      */
     public static void saveFile(TaskList tasks, File file) {
         try {
@@ -54,18 +59,20 @@ public class Storage {
     public static TaskList loadFile() {
         TaskList taskList = new TaskList();
         try {
-            File file = new File("./data.txt");
+            File file = new File(FILEPATH);
             Scanner scan = new Scanner(file);
 
             // Define regex patterns to handle descriptions with spaces:
-            Pattern todoPattern = Pattern.compile("^\\[T\\]\\[( |X)\\] (.*)$");
-            Pattern deadlinePattern = Pattern.compile("^\\[D\\]\\[( |X)\\] (.*?) \\(by: (.*?)\\)$");
-            Pattern eventPattern = Pattern.compile("^\\[E\\]\\[( |X)\\] (.*?) \\(from: (.*?) to: (.*?)\\)$");
+            Pattern todoPattern = Pattern.compile("^\\[T]\\[([ X])] (.*)$");
+            Pattern deadlinePattern = Pattern.compile("^\\[D]\\[([ X])] (.*?) \\(by: (.*?)\\)$");
+            Pattern eventPattern = Pattern.compile("^\\[E]\\[([ X])] (.*?) \\(from: (.*?) to: (.*?)\\)$");
 
             while (scan.hasNextLine()) {
                 String line = scan.nextLine();
                 Matcher matcher;
-                if (line.startsWith("[T]")) {
+                String taskType = line.length() >= 3 ? line.substring(1, 2) : "";
+                switch (taskType) {
+                case "T":
                     matcher = todoPattern.matcher(line);
                     if (matcher.matches()) {
                         boolean isDone = matcher.group(1).trim().equals("X");
@@ -76,7 +83,9 @@ public class Storage {
                     } else {
                         System.out.println("Error parsing todo: " + line);
                     }
-                } else if (line.startsWith("[D]")) {
+                    break;
+
+                case "D":
                     matcher = deadlinePattern.matcher(line);
                     if (matcher.matches()) {
                         boolean isDone = matcher.group(1).trim().equals("X");
@@ -88,7 +97,9 @@ public class Storage {
                     } else {
                         System.out.println("Error parsing deadline: " + line);
                     }
-                } else if (line.startsWith("[E]")) {
+                    break;
+
+                case "E":
                     matcher = eventPattern.matcher(line);
                     if (matcher.matches()) {
                         boolean isDone = matcher.group(1).trim().equals("X");
@@ -101,7 +112,9 @@ public class Storage {
                     } else {
                         System.out.println("Error parsing event: " + line);
                     }
-                } else {
+                    break;
+
+                default:
                     System.out.println("Error in loading line: " + line);
                 }
             }

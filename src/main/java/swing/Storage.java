@@ -24,11 +24,11 @@ public class Storage {
      */
     public static void createFile() {
         try {
-            // Create file to store data if it does not exist
+            //create file to store data if it does not exist
             File f = new File(FILEPATH);
-            if (f.createNewFile()) { // Only creates file if not existing
+            if (f.createNewFile()) { //only creates file if not existing
                 System.out.println("Data file created");
-            } else { // Data file exists, read it
+            } else { //data file exists, read it
                 System.out.println("Data found, reading existing data");
             }
         } catch (IOException e) {
@@ -62,7 +62,7 @@ public class Storage {
             File file = new File(FILEPATH);
             Scanner scan = new Scanner(file);
 
-            // Define regex patterns to handle descriptions with spaces:
+            //regex patterns used so that spaces can be handled correctly
             Pattern todoPattern = Pattern.compile("^\\[T]\\[([ X])] (.*)$");
             Pattern deadlinePattern = Pattern.compile("^\\[D]\\[([ X])] (.*?) \\(by: (.*?)\\)$");
             Pattern eventPattern = Pattern.compile("^\\[E]\\[([ X])] (.*?) \\(from: (.*?) to: (.*?)\\)$");

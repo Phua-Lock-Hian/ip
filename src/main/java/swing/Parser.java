@@ -1,5 +1,7 @@
 package swing;
 
+import java.io.File;
+
 import swing.tasktypes.Task;
 import swing.tasktypes.Deadline;
 import swing.tasktypes.Event;
@@ -15,7 +17,6 @@ public class Parser {
 
     private boolean isInvalidIndex(int index, TaskList tasks, Ui ui) {
         if (index <= 0 || index > tasks.size()) {
-            printErrorMessage(ui);
             return true;
         }
         return false;
@@ -38,7 +39,7 @@ public class Parser {
 
     private void processEventCommand(String[] eventArgParts, String eventDesc, TaskList tasks, Ui ui) throws SwingException {
         String start = eventArgParts[1].split("from ", 2)[1].trim(); //otherwise there is an extra space after start param
-        String end = eventArgParts[2].split("to ", 2)[1];
+        String end = eventArgParts[2].contains("to ") ? eventArgParts[2].split("to ", 2)[1].trim() : ""; //account for case where there is nothing after /to
         if (start.isEmpty() || end.isEmpty()) {
             throw new SwingException();
         }
@@ -46,13 +47,18 @@ public class Parser {
         addToList(tasks, ui);
     }
 
+    /**
+     * @param tasks contains the list of tasks
+     * @param ui    handles user interface
+     * @param parts contains user input
+     */
     private void processDeadlineCommand(String[] parts, TaskList tasks, Ui ui) throws SwingException {
         if (isInvalidCommand(parts, 2) || !parts[1].contains("/by")) {
             throw new SwingException();
         }
-        String[] deadlineArgParts = parts[1].split(" /by");
+        String[] deadlineArgParts = parts[1].trim().split(" /by");
         String deadlineDesc = deadlineArgParts[0];
-        if (deadlineArgParts[1].isEmpty() || deadlineArgParts.length > 2) {
+        if (deadlineArgParts.length != 2 || deadlineArgParts[1].isEmpty()) {
             throw new SwingException();
         }
         String by = deadlineArgParts[1].split(" ", 2)[1];
@@ -67,8 +73,15 @@ public class Parser {
         if (isInvalidCommand(parts, 2)) {
             throw new SwingException();
         }
-        int index = Integer.parseInt(parts[1]);
-        if (isInvalidIndex(index, tasks, ui)) return;
+        int index = -1; //initialize to an invalid value first in case of error
+        try {
+            index = Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
+            throw new SwingException();
+        }
+        if (isInvalidIndex(index, tasks, ui)) {
+            throw new SwingException();
+        }
 
         tasks.get(index - 1).setStatusIcon(isDone);
         if (isDone) {
@@ -79,6 +92,11 @@ public class Parser {
         ui.showMessage(tasks.get(index - 1).toString());
     }
 
+    /**
+     * @param tasks contains the list of tasks
+     * @param ui    handles user interface
+     * @param parts contains user input
+     */
     private void processDeleteCommand(String[] parts, TaskList tasks, Ui ui) throws SwingException {
         if (isInvalidCommand(parts, 2)) {
             throw new SwingException();
@@ -86,20 +104,22 @@ public class Parser {
 
         try {
             int index = Integer.parseInt(parts[1]);
-            if (isInvalidIndex(index, tasks, ui)) return;
+            if (isInvalidIndex(index, tasks, ui)) {
+                throw new SwingException();
+            }
 
             ui.showMessage("Okay, I've removed this task meow:");
             ui.showMessage(tasks.get(index - 1).toString()); //account for zero indexing
             tasks.remove(index - 1);
             ui.showMessage("Now you have " + tasks.size() + " tasks in list.");
         } catch (NumberFormatException e) {
-            ui.showMessage("I can't help you without the item number meow :(");
+            throw new SwingException();
         }
     }
 
     /**
      * @param tasks contains the list of tasks
-     * @param ui handles user interface
+     * @param ui    handles user interface
      * @param parts contains user input
      */
     private void processFindCommand(TaskList tasks, Ui ui, String[] parts) {
@@ -113,94 +133,119 @@ public class Parser {
         ui.showMessage("Here are the matching tasks in your list meow:");
         processListCommand(searchResults, ui);
     }
-
+    /**
+     * @param tasks contains the list of tasks
+     * @param ui    handles user interface
+     * @param line contains user input
+     */
     public void parseAndExecute(String line, TaskList tasks, Ui ui) {
         String[] parts = line.split(" ", 2);
-        String command = parts[0].toLowerCase(); //make the command case-insensitive
+        String command = parts[0].toLowerCase(); //make command case-insensitive
+        boolean shouldSave = false; //track if file should be saved
+
         switch (command) {
         case "list":
-            //validation is done outside so that I do not have to pass parts into the process command function
-            if (isInvalidCommand(parts, 1)) { //in case user types list followed by some extra text
+            if (isInvalidCommand(parts, 1)) {
                 printErrorMessage(ui);
-                break;
+                return;
             }
-            ui.showMessage("Here are the tasks in your list meow:"); //placed outside processListCommand so the former is reusable for "find" case
+            ui.showMessage("Here are the tasks in your list meow:");
             processListCommand(tasks, ui);
-            break;
+            return;
+
         case "delete":
             try {
                 processDeleteCommand(parts, tasks, ui);
+                shouldSave = true;
             } catch (SwingException e) {
                 printErrorMessage(ui);
+                return;
             }
             break;
+
         case "mark":
             try {
                 processTaskStatus(parts, true, tasks, ui);
+                shouldSave = true;
             } catch (SwingException e) {
                 printErrorMessage(ui);
+                return;
             }
             break;
+
         case "unmark":
             try {
                 processTaskStatus(parts, false, tasks, ui);
+                shouldSave = true;
             } catch (SwingException e) {
                 printErrorMessage(ui);
+                return;
             }
             break;
+
         case "deadline":
             try {
                 processDeadlineCommand(parts, tasks, ui);
+                shouldSave = true;
             } catch (SwingException e) {
                 printErrorMessage(ui);
+                return;
             }
             break;
+
         case "event":
-            //event command requires more validation than the rest
-            //have not thought of a good way to abstract this better, but it is functional this way still
             if (isInvalidCommand(parts, 2)) {
                 printErrorMessage(ui);
-                break;
+                return;
             }
 
             String[] eventArgParts = parts[1].split("/");
-
             if (isInvalidCommand(eventArgParts, 3)) {
                 printErrorMessage(ui);
-                break;
+                return;
             }
 
             String eventDesc = eventArgParts[0];
 
             if (!eventArgParts[1].startsWith("from") || !eventArgParts[2].startsWith("to")) {
                 printErrorMessage(ui);
-                break;
+                return;
             }
+
             try {
                 processEventCommand(eventArgParts, eventDesc, tasks, ui);
+                shouldSave = true;
             } catch (SwingException e) {
                 printErrorMessage(ui);
+                return;
             }
             break;
+
         case "todo":
-            //instruction assumes no more than 100 tasks
-            //hence no need to check for index out of range
             if (isInvalidCommand(parts, 2)) {
                 printErrorMessage(ui);
-                break;
+                return;
             }
             tasks.add(new Task(parts[1]));
             addToList(tasks, ui);
+            shouldSave = true;
             break;
+
         case "find":
             processFindCommand(tasks, ui, parts);
-            break;
+            return;
+
         case "bye":
-            break;
+            return; //auto save on exit
+
         default:
-            //default case is invalid command
             printErrorMessage(ui);
-            break;
+            return;
+        }
+
+        // Save file only if a change was made
+        if (shouldSave) { //not sure why this is saying it is always true?
+            Storage.saveFile(tasks, new File("data.txt"));
         }
     }
 }

@@ -232,8 +232,12 @@ public class Parser {
             break;
 
         case "find":
+            if (isInvalidCommand(parts, 2)) {
+                printErrorMessage(ui);
+                return;
+            }
             processFindCommand(tasks, ui, parts);
-            return;
+            break;
 
         case "bye":
             return; //auto save on exit
